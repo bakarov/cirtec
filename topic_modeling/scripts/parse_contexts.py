@@ -11,6 +11,7 @@ from json import dump, load
 import re
 import numpy as np
 import warnings
+import optparse
 
 warnings.filterwarnings('ignore')
 
@@ -99,4 +100,10 @@ def write_topics(topics_dist, file_name=path.join('topic_output.json')):
         dump(dict(topics_dist), f, ensure_ascii=False)
         
 if __name__ == '__main__':
-    write_topics(create_topics(create_context_groups(read_data())))
+    parser = optparse.OptionParser()
+    parser.add_option('-i', '--input',
+        help="Path to the input file", default="../../data/citcon4bundles.txt")
+    parser.add_option('-o', '--output',
+        help="Path to the output file", default="topic_output.json")
+    options, args = parser.parse_args()
+    write_topics(create_topics(create_context_groups(read_data(options.input))), options.output)
