@@ -1,17 +1,17 @@
 from gensim.models import LdaMulticore
 from gensim.corpora import Dictionary
-from os import path
-from collections import defaultdict
+from os import path, makedirs
+from collections import Counter, defaultdict
 from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 from pymorphy2 import MorphAnalyzer
 from json import dump, load
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 # import pyLDAvis.gensim
 import re
 import numpy as np
 import warnings
-import optparse
 
 warnings.filterwarnings('ignore')
 
@@ -95,15 +95,60 @@ def create_topics(context_groups):
             continue
     return dict(topics_dist)
 
-def write_topics(topics_dist, file_name=path.join('topic_output.json')):
-    with open(file_name, 'w') as f:
+def write_topics(topics_dist, output_dir, file_name='topic_output.json'):
+    with open(path.join(output_dir, file_name), 'w') as f:
         dump(dict(topics_dist), f, ensure_ascii=False)
+        
+def get_tf_idf_weights(topics):
+    vectorizer = TfidfVectorizer(min_df=0,)
+    X = vectorizer.fit_transform(topic.replace(', ', ' ') for topic in topics)
+    idf = vectorizer._tfidf.idf_
+    tf_idf_weights = {}
+    for word, weight in dict(zip(vectorizer.get_feature_names(), idf)).items():
+        tf_idf_weights[word] = round(weight, 2)
+    return tf_idf_weights
+
+def get_counts(topics):
+    return Counter(', '.join(topics).split(', '))
+
+def get_topics(item):
+    topics = []
+    for topic in item:
+        topics.append(topic['topic'])
+    return topics
+
+def get_words_dict(tf_idf_weights, counts):
+    words = defaultdict(lambda: {})
+    for word in counts.keys():
+        try:
+            words[str(word)]['tf_idf'] = float(tf_idf_weights[word])
+            words[str(word)]['freq'] = float(counts[word])
+        except KeyError:
+            pass
+    return dict(words)
+
+def get_word_frequencies(topics_dist):
+    words_data = defaultdict(lambda: {})
+    for key, item in topics_dist.items():
+        topics = get_topics(item) 
+        words_data[key] = get_words_dict(get_tf_idf_weights(topics), get_counts(topics))
+    return words_data
+
+def write_word_frequencies(words_data, output_dir, file_name='words_freqs.json'):
+    with open(path.join(output_dir, file_name), 'w') as f:
+        dump(dict(words_data), f, ensure_ascii=False)
         
 if __name__ == '__main__':
     parser = optparse.OptionParser()
     parser.add_option('-i', '--input',
         help="Path to the input file", default="../../data/citcon4bundles.txt")
     parser.add_option('-o', '--output',
-        help="Path to the output file", default="topic_output.json")
+        help="Path to the output directory", default="data")
     options, args = parser.parse_args()
-    write_topics(create_topics(create_context_groups(read_data(options.input))), options.output)
+    if not path.exists(options.output):
+        makedirs(options.output)
+    topics = create_topics(create_context_groups(read_data(options.input)))
+    write_topics(topics, options.output)
+    word_freqs = get_word_frequencies(topics)
+    write_word_frequencies(word_freqs)
+    
