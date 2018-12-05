@@ -150,5 +150,5 @@ if __name__ == '__main__':
     topics = create_topics(create_context_groups(read_data(options.input)))
     write_topics(topics, options.output)
     word_freqs = get_word_frequencies(topics)
-    write_word_frequencies(word_freqs)
+    write_word_frequencies(word_freqs, options.output)
     
