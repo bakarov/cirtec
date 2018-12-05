@@ -111,10 +111,10 @@ def get_tf_idf_weights(topics):
 def get_counts(topics):
     return Counter(', '.join(topics).split(', '))
 
-def get_topics(item):
+def get_topics(topics_):
     topics = []
-    for topic in item:
-        topics.append(topic['topic'])
+    for topic_ in topics_['contexts']:
+        topics.append(topic_['topic'])
     return topics
 
 def get_words_dict(tf_idf_weights, counts):
