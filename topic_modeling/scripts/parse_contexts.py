@@ -68,7 +68,7 @@ def preprocess(pipeline, sentence, add_pos=False, punct_tag='PUNCT'):
                 word = '{}_{}'.format(lemma, pos)
             if lemma not in nltk_stopwords_en:
                 tokenized_par.append(lemma)
-    return ' '.join(tokenized_par)
+    return tokenized_par
 
 
 def create_context_groups(lines):
