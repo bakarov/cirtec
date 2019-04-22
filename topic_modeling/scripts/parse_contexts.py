@@ -15,6 +15,7 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
+
 nltk_stopwords_en = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", "you'll",
                      "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's",
                      'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their', 'theirs',
@@ -31,6 +32,27 @@ nltk_stopwords_en = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves'
                      'haven', "haven't", 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn',
                      "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won',
                      "won't", 'wouldn', "wouldn't"]
+
+
+nltk_stopwords_ru = ['и', 'в', 'во', 'не', 'что', 'он', 'на', 'я', 'с', 'со', 'как', 'а', 'то', 'все', 'она', 'так',
+                     'его', 'но', 'да',
+                     'ты', 'к', 'у', 'же', 'вы', 'за', 'бы', 'по', 'только', 'ее', 'мне', 'было', 'вот', 'от', 'меня',
+                     'еще', 'нет', 'о',
+                     'из', 'ему', 'теперь', 'когда', 'даже', 'ну', 'вдруг', 'ли', 'если', 'уже', 'или', 'ни', 'быть',
+                     'был', 'него', 'до',
+                     'вас', 'нибудь', 'опять', 'уж', 'вам', 'ведь', 'там', 'потом', 'себя', 'ничего', 'ей', 'может',
+                     'они', 'тут', 'где',
+                     'есть', 'надо', 'ней', 'для', 'мы', 'тебя', 'их', 'чем', 'была', 'сам', 'чтоб', 'без', 'будто',
+                     'чего', 'раз', 'тоже',
+                     'себе', 'под', 'будет', 'ж', 'тогда', 'кто', 'этот', 'того', 'потому', 'этого', 'какой', 'совсем',
+                     'ним', 'здесь',
+                     'этом', 'один', 'почти', 'мой', 'тем', 'чтобы', 'нее', 'сейчас', 'были', 'куда', 'зачем', 'всех',
+                     'никогда', 'можно',
+                     'при', 'наконец', 'два', 'об', 'другой', 'хоть', 'после', 'над', 'больше', 'тот', 'через', 'эти',
+                     'нас', 'про',
+                     'всего', 'них', 'какая', 'много', 'разве', 'три', 'эту', 'моя', 'впрочем', 'хорошо', 'свою',
+                     'этой', 'перед', 'иногда',
+                     'лучше', 'чуть', 'том', 'нельзя', 'такой', 'им', 'более', 'всегда', 'конечно', 'всю', 'между']
 
 
 def read_data(data_path=path.join('..', 'data', 'citcon4bundles.txt')):
@@ -69,7 +91,7 @@ def preprocess(pipeline, sentence, add_pos=False, punct_tag='PUNCT'):
                 continue
             if add_pos:
                 word = '{}_{}'.format(lemma, pos)
-            if lemma not in nltk_stopwords_en:
+            if lemma not in nltk_stopwords_en and lemma not in nltk_stopwords_ru:
                 tokenized_par.append(lemma)
     return tokenized_par
 
