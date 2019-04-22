@@ -39,9 +39,12 @@ def read_data(data_path=path.join('..', 'data', 'citcon4bundles.txt')):
     return lines
 
 
-def select_lang_pipeline(sentence, en_pipeline, ru_pipeline):
-    lang = detect_langs(sentence)
-    language = lang[0].lang
+def select_lang_pipeline(sentence, en_pipeline, ru_pipeline, language_pointer=None):
+    if not language_pointer:
+        lang = detect_langs(sentence)
+        language = lang[0].lang
+    else:
+        language = language_pointer
     if language == 'en':
         pipeline = en_pipeline
     elif language == 'ru':
@@ -71,21 +74,21 @@ def preprocess(pipeline, sentence, add_pos=False, punct_tag='PUNCT'):
     return tokenized_par
 
 
-def create_context_groups(lines):
+def create_context_groups(lines, manual_language=None):
     context_groups = defaultdict(lambda: {})
     errors = []
-    pattern = re.compile('([^\s\w]|_)+')
+    pattern = re.compile('[^a-zа-яA-ZА-Я ]+')
     pattern_brackets = re.compile('[\(\[].*?[\)\]]')
     en_model = Model.load(path.join('.', '..', '..', 'udpipe', 'english-ewt-ud-2.3.udpipe'))
     en_pipeline = Pipeline(en_model, 'tokenize', Pipeline.DEFAULT, Pipeline.DEFAULT, 'conllu')
     ru_model = Model.load(path.join('.', '..', '..', 'udpipe', 'russian-syntagrus-ud-2.3.udpipe'))
     ru_pipeline = Pipeline(ru_model, 'tokenize', Pipeline.DEFAULT, Pipeline.DEFAULT, 'conllu')
-    for line in lines:
+    for line in lines[:5]:
         try:
             context_group, text = line.split(' ', 1)
             splits = text.split(' ', 3)
-            pipeline = select_lang_pipeline(splits[3], en_pipeline, ru_pipeline)
-            citation_text = preprocess(pipeline, pattern.sub('', pattern_brackets.sub('', splits[3])))
+            pipeline = select_lang_pipeline(splits[3], en_pipeline, ru_pipeline, manual_language)
+            citation_text = preprocess(pipeline, pattern.sub('', pattern_brackets.sub('', splits[3].lower())))
             citation_code = '_'.join(splits[:3])
             context_groups[context_group][citation_code] = citation_text
         except ValueError:
@@ -119,8 +122,11 @@ def create_topics(context_groups):
     word_counts = defaultdict(lambda: 0)
     for key, citation in context_groups.items():
         try:
-            dictionary = Dictionary(citation.values())
-            bow_corpus = [dictionary.doc2bow(doc) for doc in citation.values()]
+            citations = citation.values()
+            if type(citations) == str:
+                citations = [citations]
+            dictionary = Dictionary(citations)
+            bow_corpus = [dictionary.doc2bow(doc) for doc in citations]
             lda_model = LdaMulticore(bow_corpus, num_topics=3, id2word=dictionary, passes=2, workers=2)
             topics[key], topics_list = pretty_print_topics(lda_model.print_topics(num_topics=3, num_words=5))
             topics_d = []
