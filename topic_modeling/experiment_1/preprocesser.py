@@ -48,7 +48,7 @@ class Preprocesser:
         for par in pipeline.process(text).split('\n\n'):
             for parsed_word in par.split('\n')[indent:]:
                 word = parsed_word.split('\t')[word_id].lower()
-                lemma = parsed_word.split('\t')[lemma_id]
+                lemma = parsed_word.split('\t')[lemma_id].lower()
                 pos = parsed_word.split('\t')[pos_id]
                 if pos == punct_tag:
                     continue
