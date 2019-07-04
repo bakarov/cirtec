@@ -29,8 +29,8 @@ def extract_topics_from_text(text_tokenized):
     try:
         dictionary = Dictionary(text_tokenized)
         bow_corpus = [dictionary.doc2bow(doc) for doc in text_tokenized]
-        lda_model = LdaMulticore(bow_corpus, num_topics=3, id2word=dictionary, passes=2, workers=2)
-        topics, topics_list = pretty_print_topics(lda_model.print_topics(num_topics=3, num_words=5))
+        lda_model = LdaMulticore(bow_corpus, num_topics=1, random_state=42, id2word=dictionary, workers=2)
+        topics, topics_list = pretty_print_topics(lda_model.print_topics(num_topics=1, num_words=5))
     except ValueError:
         return 'No topics extracted'
     return topics
