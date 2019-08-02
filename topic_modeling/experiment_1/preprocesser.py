@@ -39,6 +39,7 @@ class Preprocesser:
 
     def preprocess(self, text_, pipeline, add_pos=False, punct_tag='PUNCT'):
         text = self.pattern.sub('', self.pattern_brackets.sub('', text_))
+        text = text.replace('et al.', '')
         indent = 4
         word_id = 1
         lemma_id = 2
