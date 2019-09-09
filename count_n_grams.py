@@ -102,8 +102,10 @@ def load_data(filename: str, manual_language=None) -> Tuple[List, List, List]:
     citations_ids = []
     citations_texts = []
     citations_texts_lemma = []
+    citation_id_position = 4
     for citation in citations:
         try:
+            citation_id = '_'.join(citation.split()[:citation_id_position])
             citation_id = citation.split()[1]
         except IndexError:
             print('Citation ID was not recognized for {}'.format(citation))
