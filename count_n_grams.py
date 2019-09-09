@@ -132,10 +132,10 @@ def get_n_grams(tokens: List, n: int, min_count: int = 1, threshold: int = 1, de
     return n_grams
 
 
-def get_result(n_grams: List, citations_ids: List, max_n: int, output_path: str):
+def get_result(n_grams: List, citations_ids: List, max_n: int, output_path: str, min_n: int=2):
     result = defaultdict(lambda: defaultdict(lambda: []))
-    for n in range(max_n):
-        result_key = '{}-grams'.format(n + 1)
+    for n in range(min_n, max_n):
+        result_key = '{}-grams'.format(n)
         n_grams_global_counts = dict(Counter(token for sentence in n_grams[n] for token in set(sentence)))
         sentences_ids = {}
         for word in n_grams_global_counts.keys():
@@ -167,7 +167,7 @@ if __name__ == '__main__':
                       help='Represent a score threshold for forming the phrases (higher means fewer phrases).',
                       default=1)
     parser.add_option('-n', '--n',
-                      help='Maximum n for formed n-grams', default=3)
+                      help='Maximum n for formed n-grams', default=6)
     options, args = parser.parse_args()
     max_n = options.n - 1
     citations_ids, citations_texts, citations_texts_lemma = load_data(options.input)
