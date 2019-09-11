@@ -52,7 +52,7 @@ def normalize_sentence(sentence: str, re_pattern_1: Pattern, re_pattern_2: Patte
 
 def load_data(filename: str, lemmatize: bool, stopwords_path: str, manual_language=None) -> Tuple[List, List]:
     with open(filename, 'r') as f:
-        citations = f.read().split('\n')[:100]
+        citations = f.read().split('\n')
     stopwords = []
     for stopwords_list in listdir(stopwords_path):
         with open(path.join(stopwords_path, stopwords_list), 'r') as f:
