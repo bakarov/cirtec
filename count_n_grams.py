@@ -133,11 +133,15 @@ if __name__ == '__main__':
     parser.add_option('-m', '--min_n',
                       help='Minimum n for formed n-grams', default=2)
     parser.add_option('-l', '--lemmatization',
-                      help='Enable lemmatization for texts', default=True)
+                      help='Enable lemmatization for texts', default=1)
     parser.add_option('-s', '--stopwords_path',
                       help='Path to stop words lists', default='utils')
     options, args = parser.parse_args()
-    citations_ids, citations_texts = load_data(options.input, options.lemmatization, options.stopwords_path)
+    if options.lemmatization == 1:
+        to_lemmatize = True
+    else:
+        to_lemmatize = False
+    citations_ids, citations_texts = load_data(options.input, to_lemmatize, options.stopwords_path)
     for n in range(options.min_n, options.max_n + 1):
         n_grams_counts = get_n_grams_local_counts(citations_texts, n)
         global_n_grams_counts = get_n_grams_global_counts(n_grams_counts, options.threshold)
