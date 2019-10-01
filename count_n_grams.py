@@ -52,7 +52,7 @@ def normalize_sentence(sentence: str, re_pattern_1: Pattern, re_pattern_2: Patte
 
 def load_data(filename: str, lemmatize: bool, stopwords_path: str, manual_language=None) -> Tuple[List, List]:
     with open(filename, 'r') as f:
-        citations = f.read().split('\n')[:100]
+        citations = f.read().split('\n')
     stopwords = []
     for stopwords_list in listdir(stopwords_path):
         with open(path.join(stopwords_path, stopwords_list), 'r') as f:
@@ -93,7 +93,7 @@ def get_n_grams_local_counts(citations_texts: List, n: int, delimiter=' ') -> Li
     return n_grams_with_counts
 
 
-def get_n_grams_global_counts(n_grams: List, threshold: int) -> Dict:
+def get_n_grams_global_counts(n_grams: List, citations_ids: List, threshold: int) -> Dict:
     all_global_counts = defaultdict(lambda: {'count': 0, 'ids': []})
     threshold_global_counts = defaultdict(lambda: {})
     for sentence_id, sentence in enumerate(n_grams):
@@ -144,5 +144,5 @@ if __name__ == '__main__':
     citations_ids, citations_texts = load_data(options.input, to_lemmatize, options.stopwords_path)
     for n in range(options.min_n, options.max_n + 1):
         n_grams_counts = get_n_grams_local_counts(citations_texts, n)
-        global_n_grams_counts = get_n_grams_global_counts(n_grams_counts, options.threshold)
+        global_n_grams_counts = get_n_grams_global_counts(n_grams_counts, citations_ids, options.threshold)
         serialize_n_grams_counts(global_n_grams_counts, n, options.output)
