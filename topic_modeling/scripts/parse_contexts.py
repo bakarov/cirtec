@@ -138,7 +138,7 @@ def print_topics_by_ids(ids, topic_list, ref_key, topics_counts):
     return pretty_output, probs, topics_counts
 
 
-def create_topics(context_groups):
+def create_topics(context_groups, num_topics):
     topics = {}
     topics_dist = defaultdict(lambda: {})
     word_counts = defaultdict(lambda: 0)
@@ -149,8 +149,8 @@ def create_topics(context_groups):
                 citations = [citations]
             dictionary = Dictionary(citations)
             bow_corpus = [dictionary.doc2bow(doc) for doc in citations]
-            lda_model = LdaMulticore(bow_corpus, num_topics=3, id2word=dictionary, passes=2, workers=2)
-            topics[key], topics_list = pretty_print_topics(lda_model.print_topics(num_topics=3, num_words=5))
+            lda_model = LdaMulticore(bow_corpus, num_topics=num_topics, id2word=dictionary, passes=2, workers=2)
+            topics[key], topics_list = pretty_print_topics(lda_model.print_topics(num_topics=num_topics, num_words=5))
             topics_d = []
             probs = []
             topics_counts = defaultdict(lambda: [])
@@ -235,15 +235,16 @@ def write_word_frequencies(words_data, output_dir, file_name='words_freqs.json')
 if __name__ == '__main__':
     parser = optparse.OptionParser()
     parser.add_option('-i', '--input',
-                      help="Path to the input file", default="./../../data/citcon4bundles.en.txt")
+                      help='Path to the input file', default='./../../data/citcon4bundles.en.txt')
     parser.add_option('-o', '--output',
-                      help="Path to the output directory", default="data")
+                      help='Path to the output directory', default='data')
+    parser.add_option('-t', '--topics',
+                      help='Number of topics.', default=5)
     options, args = parser.parse_args()
     if not path.exists(options.output):
         makedirs(options.output)
     q = create_context_groups(read_data(options.input))
-    print(q['sydDYC'])
-    # topics = create_topics(create_context_groups(read_data(options.input)))
-    # write_topics(topics, options.output)
-    # word_freqs = get_word_frequencies(topics)
-    # write_word_frequencies(word_freqs, options.output)
+    topics = create_topics(create_context_groups(read_data(options.input)), options.topics)
+    write_topics(topics, options.output)
+    word_freqs = get_word_frequencies(topics)
+    write_word_frequencies(word_freqs, options.output)
