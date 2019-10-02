@@ -1,6 +1,6 @@
 from gensim.models import LdaMulticore
 from gensim.corpora import Dictionary
-from os import path, makedirs
+from os import path, makedirs, listdir
 from collections import Counter, defaultdict
 from ufal.udpipe import Model, Pipeline
 from langdetect import detect_langs
@@ -14,45 +14,6 @@ import numpy as np
 import warnings
 
 warnings.filterwarnings('ignore')
-
-
-nltk_stopwords_en = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", "you'll",
-                     "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's",
-                     'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their', 'theirs',
-                     'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 'those', 'am',
-                     'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does',
-                     'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while',
-                     'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during',
-                     'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over',
-                     'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all',
-                     'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only',
-                     'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', "don't",
-                     'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', "aren't",
-                     'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't",
-                     'haven', "haven't", 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn',
-                     "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won',
-                     "won't", 'wouldn', "wouldn't"]
-
-
-nltk_stopwords_ru = ['и', 'в', 'во', 'не', 'что', 'он', 'на', 'я', 'с', 'со', 'как', 'а', 'то', 'все', 'она', 'так',
-                     'его', 'но', 'да',
-                     'ты', 'к', 'у', 'же', 'вы', 'за', 'бы', 'по', 'только', 'ее', 'мне', 'было', 'вот', 'от', 'меня',
-                     'еще', 'нет', 'о',
-                     'из', 'ему', 'теперь', 'когда', 'даже', 'ну', 'вдруг', 'ли', 'если', 'уже', 'или', 'ни', 'быть',
-                     'был', 'него', 'до',
-                     'вас', 'нибудь', 'опять', 'уж', 'вам', 'ведь', 'там', 'потом', 'себя', 'ничего', 'ей', 'может',
-                     'они', 'тут', 'где',
-                     'есть', 'надо', 'ней', 'для', 'мы', 'тебя', 'их', 'чем', 'была', 'сам', 'чтоб', 'без', 'будто',
-                     'чего', 'раз', 'тоже',
-                     'себе', 'под', 'будет', 'ж', 'тогда', 'кто', 'этот', 'того', 'потому', 'этого', 'какой', 'совсем',
-                     'ним', 'здесь',
-                     'этом', 'один', 'почти', 'мой', 'тем', 'чтобы', 'нее', 'сейчас', 'были', 'куда', 'зачем', 'всех',
-                     'никогда', 'можно',
-                     'при', 'наконец', 'два', 'об', 'другой', 'хоть', 'после', 'над', 'больше', 'тот', 'через', 'эти',
-                     'нас', 'про',
-                     'всего', 'них', 'какая', 'много', 'разве', 'три', 'эту', 'моя', 'впрочем', 'хорошо', 'свою',
-                     'этой', 'перед', 'иногда',
-                     'лучше', 'чуть', 'том', 'нельзя', 'такой', 'им', 'более', 'всегда', 'конечно', 'всю', 'между']
 
 
 def read_data(data_path=path.join('..', 'data', 'citcon4bundles.txt')):
@@ -76,7 +37,7 @@ def select_lang_pipeline(sentence, en_pipeline, ru_pipeline, language_pointer=No
     return pipeline
 
 
-def preprocess(pipeline, sentence, add_pos=False, punct_tag='PUNCT'):
+def preprocess(pipeline, sentence, stopwords, add_pos=False, punct_tag='PUNCT'):
     indent = 4
     word_id = 1
     lemma_id = 2
@@ -91,12 +52,16 @@ def preprocess(pipeline, sentence, add_pos=False, punct_tag='PUNCT'):
                 continue
             if add_pos:
                 word = '{}_{}'.format(lemma, pos)
-            if lemma not in nltk_stopwords_en and lemma not in nltk_stopwords_ru:
+            if lemma not in stopwords:
                 tokenized_par.append(lemma)
     return tokenized_par
 
 
-def create_context_groups(lines, manual_language=None):
+def create_context_groups(lines, stopwords_path, manual_language=None):
+    stopwords = []
+    for stopwords_list in listdir(stopwords_path):
+        with open(path.join(stopwords_path, stopwords_list), 'r') as f:
+            stopwords.extend(f.read().split('\n'))
     context_groups = defaultdict(lambda: {})
     errors = []
     pattern = re.compile('[^a-zа-яA-ZА-Я ]+')
@@ -110,7 +75,7 @@ def create_context_groups(lines, manual_language=None):
             context_group, text = line.split(' ', 1)
             splits = text.split(' ', 3)
             pipeline = select_lang_pipeline(splits[3], en_pipeline, ru_pipeline, manual_language)
-            citation_text = preprocess(pipeline, pattern.sub('', pattern_brackets.sub('', splits[3].lower())))
+            citation_text = preprocess(pipeline, pattern.sub('', pattern_brackets.sub('', splits[3].lower())), stopwords)
             citation_code = '_'.join(splits[:3])
             context_groups[context_group][citation_code] = citation_text
         except ValueError:
@@ -240,11 +205,13 @@ if __name__ == '__main__':
                       help='Path to the output directory', default='data')
     parser.add_option('-t', '--topics',
                       help='Number of topics.', default=5)
+    parser.add_option('-s', '--stopwords_path',
+                      help='Path to stop words lists', default='../../utils')
     options, args = parser.parse_args()
     if not path.exists(options.output):
         makedirs(options.output)
-    q = create_context_groups(read_data(options.input))
-    topics = create_topics(create_context_groups(read_data(options.input)), options.topics)
+    cg = create_context_groups(read_data(options.input), options.stopwords_path)
+    topics = create_topics(cg, options.topics)
     write_topics(topics, options.output)
     word_freqs = get_word_frequencies(topics)
     write_word_frequencies(word_freqs, options.output)
